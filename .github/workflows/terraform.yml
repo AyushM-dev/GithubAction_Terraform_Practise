@@ -1,0 +1,73 @@
+name: Terraform Pipeline #Name of Actions
+
+env: #Environment Variables
+  ARM_USE_OIDC: true #Enables OpenID Connect (OIDC) authentication with Azure
+  ARM_CLIENT_ID: ${{ vars.CLIENT_ID }} # Read from GitHub Repository Variables
+  ARM_SUBSCRIPTION_ID: ${{ vars.SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ vars.TENANT_ID }}
+
+defaults: #Sets a default working directory (./terraform) for all steps
+  run:
+    working-directory: ./terraform
+
+on: #Trigger actions if either of conditions met
+  push: #Runs the workflow when a commit is pushed to the main branch
+    branches:
+      - main
+
+  pull_request: #Runs the workflow when a PR is opened, updated, or synchronized with the main branch.
+    branches:
+      - main
+
+permissions:
+  contents: read # Allows the workflow to read the repository contents.
+  id-token: write # Enables GitHub OIDC authentication with Azure (for secure authentication without storing credentials).
+
+jobs:
+  plan: #Plan Job
+    name: Plan #Job display name plan
+    runs-on: ubuntu-latest #GitHub-hosted runner
+    steps:
+      - name: Checkout #clones the repository into the runner working directory
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform #Sets up Terraform on the runner
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false #Disables the Terraform wrapper script for better logging
+
+      - name: Terraform Init #Initializes Terraform with a remote backend.
+        run: |
+          terraform init -backend-config='resource_group_name=Ue1HTFRG' \
+                         -backend-config='storage_account_name=ue1htf' \
+                         -backend-config='container_name=dev' \
+                         -backend-config='key=interview'
+      
+      - name: Terraform Plan
+        run: |
+          terraform plan -out=tfplan
+                         
+
+  apply: #Apply Job
+    needs: plan
+    if: success() && github.ref == 'refs/heads/main'
+    name: Apply #Job display name apply
+    runs-on: ubuntu-latest #GitHub-hosted runner
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        run: |
+          terraform init -backend-config='resource_group_name=Ue1HTFRG' \
+                         -backend-config='storage_account_name=ue1htf' \
+                         -backend-config='container_name=dev' \
+                         -backend-config='key=interview'
+
+#      - name: Terraform Apply
+#        run: terraform apply -auto-approve tfplan
