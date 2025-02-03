@@ -38,10 +38,10 @@ jobs:
 
       - name: Terraform Init #Initializes Terraform with a remote backend.
         run: |
-          terraform init -backend-config='resource_group_name=Ue1HTFRG' \
-                         -backend-config='storage_account_name=ue1htf' \
-                         -backend-config='container_name=dev' \
-                         -backend-config='key=interview'
+          terraform init -backend-config='resource_group_name=' \
+                         -backend-config='storage_account_name=' \
+                         -backend-config='container_name=' \
+                         -backend-config='key='
       
       - name: Terraform Plan
         run: |
@@ -64,10 +64,10 @@ jobs:
 
       - name: Terraform Init
         run: |
-          terraform init -backend-config='resource_group_name=Ue1HTFRG' \
-                         -backend-config='storage_account_name=ue1htf' \
-                         -backend-config='container_name=dev' \
-                         -backend-config='key=interview'
+          terraform init -backend-config='resource_group_name=' \
+                         -backend-config='storage_account_name=' \
+                         -backend-config='container_name=' \
+                         -backend-config='key='
 
 #      - name: Terraform Apply
 #        run: terraform apply -auto-approve tfplan
